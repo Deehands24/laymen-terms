@@ -1,4 +1,4 @@
-import { sql, poolPromise } from "./db"
+import { sql, getConnection } from "./db"
 
 export interface User {
   id: number
@@ -41,15 +41,7 @@ export interface UserActivitySummary {
 // Get user translations history
 export async function getUserTranslations(userId: number): Promise<UserLaymenTermsView[]> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), use mock data
-    if (!pool) {
-      console.log("Using mock data for getUserTranslations")
-      const { mockGetUserTranslations } = require("./mock-data")
-      return mockGetUserTranslations(userId)
-    }
-
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("CurrentUserId", sql.Int, userId)
@@ -68,7 +60,7 @@ export async function getUserTranslations(userId: number): Promise<UserLaymenTer
 // Get user activity summary
 export async function getUserActivitySummary(userId: number): Promise<UserActivitySummary> {
   try {
-    const pool = await poolPromise
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("UserId", sql.Int, userId)
@@ -84,15 +76,7 @@ export async function getUserActivitySummary(userId: number): Promise<UserActivi
 // Submit new medical text for translation
 export async function submitMedicalText(userId: number, text: string): Promise<number> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), use mock data
-    if (!pool) {
-      console.log("Using mock data for submitMedicalText")
-      const { mockSubmitMedicalText } = require("./mock-data")
-      return mockSubmitMedicalText(userId, text)
-    }
-
+    const pool = await getConnection()
     // Insert submission
     const submissionResult = await pool
       .request()
@@ -117,15 +101,7 @@ export async function submitMedicalText(userId: number, text: string): Promise<n
 // Save laymen terms explanation
 export async function saveLaymenTerms(submissionId: number, explanation: string): Promise<number> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), use mock data
-    if (!pool) {
-      console.log("Using mock data for saveLaymenTerms")
-      const { mockSaveLaymenTerms } = require("./mock-data")
-      return mockSaveLaymenTerms(submissionId, explanation)
-    }
-
+    const pool = await getConnection()
     // Insert laymen terms
     const result = await pool
       .request()
@@ -150,15 +126,7 @@ export async function saveLaymenTerms(submissionId: number, explanation: string)
 // Get user by username
 export async function getUserByUsername(username: string): Promise<User | null> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), use mock data
-    if (!pool) {
-      console.log("Using mock data for getUserByUsername")
-      const { mockGetUserByUsername } = require("./mock-data")
-      return mockGetUserByUsername(username)
-    }
-
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("Username", sql.NVarChar, username)
@@ -177,15 +145,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
 // Create new user
 export async function createUser(username: string, password: string): Promise<number> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), use mock data
-    if (!pool) {
-      console.log("Using mock data for createUser")
-      const { mockCreateUser } = require("./mock-data")
-      return mockCreateUser(username, password)
-    }
-
+    const pool = await getConnection()
     // In a real app, you would hash the password
     const result = await pool
       .request()

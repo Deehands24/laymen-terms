@@ -1,4 +1,4 @@
-import { sql, poolPromise } from "./db"
+import { sql, getConnection } from "./db"
 
 export interface SubscriptionTier {
   id: number
@@ -19,21 +19,7 @@ export interface UserSubscription {
 
 export async function getUserSubscription(userId: number): Promise<UserSubscription | null> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), return mock data
-    if (!pool) {
-      console.log("Using mock data for getUserSubscription")
-      return {
-        userId,
-        tierId: 1,
-        startDate: new Date(),
-        endDate: null,
-        isActive: true,
-        translationsUsed: 0,
-      }
-    }
-
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("UserId", sql.Int, userId)
@@ -59,20 +45,7 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
 
 export async function getSubscriptionTier(tierId: number): Promise<SubscriptionTier | null> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), return mock data
-    if (!pool) {
-      console.log("Using mock data for getSubscriptionTier")
-      return {
-        id: tierId,
-        name: "Free",
-        monthlyPrice: 0,
-        translationsPerMonth: 5,
-        features: ["5 translations per month"],
-      }
-    }
-
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("TierId", sql.Int, tierId)
@@ -97,14 +70,7 @@ export async function getSubscriptionTier(tierId: number): Promise<SubscriptionT
 
 export async function incrementTranslationUsage(userId: number): Promise<boolean> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), return success
-    if (!pool) {
-      console.log("Using mock data for incrementTranslationUsage")
-      return true
-    }
-
+    const pool = await getConnection()
     await pool
       .request()
       .input("UserId", sql.Int, userId)
@@ -127,17 +93,7 @@ export async function checkTranslationLimit(userId: number): Promise<{
   limit: number
 }> {
   try {
-    // In development or if database connection fails, allow translations
-    const pool = await poolPromise
-    if (!pool || process.env.NODE_ENV !== "production") {
-      console.log("Using mock data for checkTranslationLimit")
-      return {
-        canTranslate: true,
-        remaining: 5,
-        limit: 5,
-      }
-    }
-
+    const pool = await getConnection()
     const subscription = await getUserSubscription(userId)
 
     // If no subscription, use free tier limit (5 translations)
@@ -176,14 +132,7 @@ export async function checkTranslationLimit(userId: number): Promise<{
 
 async function getFreeUsage(userId: number): Promise<number> {
   try {
-    const pool = await poolPromise
-
-    // If pool is null (connection failed), return 0
-    if (!pool) {
-      console.log("Using mock data for getFreeUsage")
-      return 0
-    }
-
+    const pool = await getConnection()
     const result = await pool
       .request()
       .input("UserId", sql.Int, userId)

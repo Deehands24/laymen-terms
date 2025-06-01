@@ -12,6 +12,9 @@ const config: sql.config = {
   options: {
     encrypt: true,
     trustServerCertificate: false,
+    enableArithAbort: true,
+    connectTimeout: 30000,
+    requestTimeout: 30000,
   },
 }
 
@@ -29,7 +32,13 @@ export async function getConnection(): Promise<sql.ConnectionPool> {
       return pool
     }
     
+    console.log("Attempting database connection with config:", {
+      ...config,
+      password: "******",
+    })
+    
     pool = await new sql.ConnectionPool(config).connect()
+    console.log("Database connection successful!")
     return pool
   } catch (err) {
     console.error("Database connection error:", err)
