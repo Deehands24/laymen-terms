@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getUserByUsername, createUser } from "@/lib/data-access"
+import { registerUser, loginUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   // Add CORS headers for cross-origin requests
@@ -32,68 +33,21 @@ export async function POST(request: NextRequest) {
 
     if (action === "login") {
       console.log("Login attempt for:", username)
-      // In a real app, you would verify the password
-      try {
-        const user = await getUserByUsername(username)
-        console.log("User found:", user ? "Yes" : "No")
-
-        if (!user) {
-          return NextResponse.json({ error: "Invalid username or password" }, { status: 401, headers })
-        }
-
-        return NextResponse.json(
-          {
-            success: true,
-            data: { userId: user.id, username: user.username },
-          },
-          { headers },
-        )
-      } catch (dbError) {
-        console.error("Database error during login:", dbError)
-        throw dbError
-      }
+      const result = await loginUser(username, password)
+      return NextResponse.json({ data: result }, { headers })
     } else if (action === "register") {
       console.log("Registration attempt for:", username)
-      // Check if user already exists
-      try {
-        const existingUser = await getUserByUsername(username)
-        console.log("Existing user found:", existingUser ? "Yes" : "No")
-
-        if (existingUser) {
-          return NextResponse.json({ error: "Username already exists" }, { status: 409, headers })
-        }
-
-        // Create new user
-        const userId = await createUser(username, password)
-        console.log("User created with ID:", userId)
-
-        return NextResponse.json(
-          {
-            success: true,
-            data: { userId, username },
-          },
-          { headers },
-        )
-      } catch (dbError) {
-        console.error("Database error during registration:", dbError)
-        throw dbError
-      }
+      const user = await registerUser(username, password)
+      return NextResponse.json({ data: { userId: user.id, username: user.username } }, { headers })
     } else {
       console.log("Invalid action:", action)
       return NextResponse.json({ error: "Invalid action" }, { status: 400, headers })
     }
   } catch (error) {
-    console.error("Authentication error:", error)
-    // Return more detailed error information
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    const errorStack = error instanceof Error ? error.stack : ""
+    console.error("Auth error:", error)
     return NextResponse.json(
-      {
-        error: "Authentication failed",
-        details: errorMessage,
-        stack: errorStack,
-      },
-      { status: 500, headers },
+      { error: error instanceof Error ? error.message : "Authentication failed" },
+      { status: 500, headers }
     )
   }
 }

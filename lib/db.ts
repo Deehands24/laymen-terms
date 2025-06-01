@@ -4,15 +4,14 @@ import sql from "mssql"
 const isProduction = process.env.NODE_ENV === "production"
 
 // Use environment variables if available, otherwise fall back to hardcoded values
-const config = {
-  server: process.env.DB_SERVER || "localhost",
-  port: Number.parseInt(process.env.DB_PORT || "1433"),
-  database: process.env.DB_NAME || "MedicalTermsDB",
-  user: process.env.DB_USER || "sa",
-  password: process.env.DB_PASSWORD || "StrongPassword123",
+const config: sql.config = {
+  server: process.env.DB_SERVER || "",
+  database: process.env.DB_DATABASE || "",
+  user: process.env.DB_USER || "",
+  password: process.env.DB_PASSWORD || "",
   options: {
-    trustServerCertificate: true,
-    enableArithAbort: true,
+    encrypt: true,
+    trustServerCertificate: false,
   },
 }
 
@@ -21,24 +20,45 @@ console.log("Database config (without password):", {
   password: "******", // Don't log the actual password
 })
 
-// Create a connection pool
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
-  .then((pool) => {
-    console.log("Connected to SQL Server")
-    return pool
-  })
-  .catch((err) => {
-    console.error("Database Connection Failed: ", err)
+// Database connection pool
+let pool: sql.ConnectionPool | null = null
 
-    // In production, we'll return null which will be handled by the data access layer
-    // In development, we'll throw the error to make debugging easier
-    if (isProduction) {
-      console.log("Using mock data in production due to database connection failure")
-      return null
-    } else {
-      throw err
+export async function getConnection(): Promise<sql.ConnectionPool> {
+  try {
+    if (pool) {
+      return pool
     }
-  })
+    
+    pool = await new sql.ConnectionPool(config).connect()
+    return pool
+  } catch (err) {
+    console.error("Database connection error:", err)
+    throw new Error("Failed to connect to database")
+  }
+}
 
-export { sql, poolPromise }
+// Initialize database tables
+export async function initializeDatabase() {
+  try {
+    const pool = await getConnection()
+    
+    // Create users table if it doesn't exist
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='users' and xtype='U')
+      CREATE TABLE users (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        username NVARCHAR(50) NOT NULL UNIQUE,
+        password_hash NVARCHAR(255) NOT NULL,
+        created_at DATETIME DEFAULT GETDATE(),
+        updated_at DATETIME DEFAULT GETDATE()
+      )
+    `)
+    
+    console.log("Database initialized successfully")
+  } catch (err) {
+    console.error("Failed to initialize database:", err)
+    throw err
+  }
+}
+
+export { sql }
