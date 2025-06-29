@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { getConnection } from './db';
+import { supabase } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
@@ -11,15 +11,14 @@ export interface User {
 }
 
 export async function registerUser(username: string, password: string): Promise<User> {
-  const pool = await getConnection();
-  
   // Check if username already exists
-  const userCheck = await pool
-    .request()
-    .input('username', username)
-    .query('SELECT id FROM users WHERE username = @username');
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('username', username)
+    .single();
     
-  if (userCheck.recordset.length > 0) {
+  if (existingUser) {
     throw new Error('Username already exists');
   }
   
@@ -27,31 +26,31 @@ export async function registerUser(username: string, password: string): Promise<
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   
   // Insert new user
-  const result = await pool
-    .request()
-    .input('username', username)
-    .input('password_hash', passwordHash)
-    .query(`
-      INSERT INTO users (username, password_hash)
-      OUTPUT INSERTED.id, INSERTED.username
-      VALUES (@username, @password_hash)
-    `);
+  const { data, error } = await supabase
+    .from('users')
+    .insert({
+      username,
+      password_hash: passwordHash
+    })
+    .select('id, username')
+    .single();
     
-  return result.recordset[0];
+  if (error) {
+    throw new Error('Failed to create user');
+  }
+    
+  return data;
 }
 
 export async function loginUser(username: string, password: string): Promise<{ user: User; token: string }> {
-  const pool = await getConnection();
-  
   // Get user
-  const result = await pool
-    .request()
-    .input('username', username)
-    .query('SELECT id, username, password_hash FROM users WHERE username = @username');
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('id, username, password_hash')
+    .eq('username', username)
+    .single();
     
-  const user = result.recordset[0];
-  
-  if (!user) {
+  if (error || !user) {
     throw new Error('User not found');
   }
   

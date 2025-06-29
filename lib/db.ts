@@ -1,73 +1,45 @@
-import sql from "mssql"
+import { createClient } from '@supabase/supabase-js'
 
-// Check if we're in a production environment
-const isProduction = process.env.NODE_ENV === "production"
+// Supabase configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-// Use environment variables if available, otherwise fall back to hardcoded values
-const config: sql.config = {
-  server: process.env.DB_SERVER || "",
-  database: process.env.DB_DATABASE || "",
-  user: process.env.DB_USER || "",
-  password: process.env.DB_PASSWORD || "",
-  options: {
-    encrypt: true,
-    trustServerCertificate: false,
-    enableArithAbort: true,
-    connectTimeout: 30000,
-    requestTimeout: 30000,
-  },
-}
+// Create Supabase client for public operations
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-console.log("Database config (without password):", {
-  ...config,
-  password: "******", // Don't log the actual password
-})
+// Create Supabase client with service role for admin operations
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-// Database connection pool
-let pool: sql.ConnectionPool | null = null
-
-export async function getConnection(): Promise<sql.ConnectionPool> {
-  try {
-    if (pool) {
-      return pool
-    }
-    
-    console.log("Attempting database connection with config:", {
-      ...config,
-      password: "******",
-    })
-    
-    pool = await new sql.ConnectionPool(config).connect()
-    console.log("Database connection successful!")
-    return pool
-  } catch (err) {
-    console.error("Database connection error:", err)
-    throw new Error("Failed to connect to database")
-  }
-}
+console.log('Supabase initialized with URL:', supabaseUrl ? 'Configured' : 'Not configured')
 
 // Initialize database tables
 export async function initializeDatabase() {
   try {
-    const pool = await getConnection()
+    // Check if users table exists by trying to query it
+    const { error } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1)
     
-    // Create users table if it doesn't exist
-    await pool.request().query(`
-      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='users' and xtype='U')
-      CREATE TABLE users (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        username NVARCHAR(50) NOT NULL UNIQUE,
-        password_hash NVARCHAR(255) NOT NULL,
-        created_at DATETIME DEFAULT GETDATE(),
-        updated_at DATETIME DEFAULT GETDATE()
-      )
-    `)
-    
-    console.log("Database initialized successfully")
+    if (error && error.code === '42P01') {
+      // Table doesn't exist, create it
+      console.log('Creating database tables...')
+      
+      // Note: In Supabase, you typically create tables through the dashboard
+      // or using migrations. This is just for reference.
+      console.log('Please create tables through Supabase dashboard or migrations')
+    } else if (error) {
+      console.error('Database check error:', error)
+      throw error
+    } else {
+      console.log('Database initialized successfully')
+    }
   } catch (err) {
-    console.error("Failed to initialize database:", err)
+    console.error('Failed to initialize database:', err)
     throw err
   }
 }
 
-export { sql }
+// Export for backward compatibility
+export { supabase as getConnection }

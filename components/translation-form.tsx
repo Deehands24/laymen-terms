@@ -55,23 +55,28 @@ export function TranslationForm({ userId }: TranslationFormProps) {
     setResult("")
 
     try {
-      console.log("Submitting translation request for user:", userId)
+      // Debug logs
+      console.log("TranslationForm - Current userId:", userId)
+      console.log("TranslationForm - Current inputText:", inputText)
+      
+      const requestData = {
+        userId,
+        medicalText: inputText,
+        model: selectedModel,
+      }
+      console.log("TranslationForm - Request data being sent:", requestData)
 
       const response = await fetch("/api/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          userId,
-          medicalText: inputText,
-          model: selectedModel,
-        }),
+        body: JSON.stringify(requestData),
       })
 
-      console.log("Response status:", response.status)
+      console.log("TranslationForm - Response status:", response.status)
       const data = await response.json()
-      console.log("Response received:", data.success ? "Success" : "Failed")
+      console.log("TranslationForm - Response data:", data)
 
       if (!response.ok) {
         if (response.status === 403) {

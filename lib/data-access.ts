@@ -1,4 +1,4 @@
-import { sql, getConnection } from "./db"
+import { supabase } from "./db"
 
 export interface User {
   id: number
@@ -41,128 +41,112 @@ export interface UserActivitySummary {
 // Get user translations history
 export async function getUserTranslations(userId: number): Promise<UserLaymenTermsView[]> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("CurrentUserId", sql.Int, userId)
-      .query("SELECT * FROM [dbo].[UserLaymenTermsView] WHERE UserId = @CurrentUserId ORDER BY SubmittedAt DESC")
+    const { data, error } = await supabase
+      .from('user_laymen_terms_view')
+      .select('*')
+      .eq('userId', userId)
+      .order('submittedAt', { ascending: false })
 
-    return result.recordset
+    if (error) throw error
+    return data || []
   } catch (error) {
     console.error("Error fetching user translations:", error)
-    // Fall back to mock data in case of error
-    console.log("Falling back to mock data after error in getUserTranslations")
-    const { mockGetUserTranslations } = require("./mock-data")
-    return mockGetUserTranslations(userId)
+    return []
   }
 }
 
 // Get user activity summary
-export async function getUserActivitySummary(userId: number): Promise<UserActivitySummary> {
+export async function getUserActivitySummary(userId: number): Promise<UserActivitySummary | null> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query("SELECT * FROM [dbo].[UserActivitySummary] WHERE UserId = @UserId")
+    const { data, error } = await supabase
+      .from('user_activity_summary')
+      .select('*')
+      .eq('userId', userId)
+      .single()
 
-    return result.recordset[0]
+    if (error) throw error
+    return data
   } catch (error) {
     console.error("Error fetching user activity summary:", error)
-    throw error
+    return null
   }
 }
 
 // Submit new medical text for translation
 export async function submitMedicalText(userId: number, text: string): Promise<number> {
   try {
-    const pool = await getConnection()
-    // Insert submission
-    const submissionResult = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .input("SubmittedText", sql.NVarChar, text)
-      .query(`
-        INSERT INTO [dbo].[Submissions] (UserId, SubmittedText, SubmittedAt)
-        VALUES (@UserId, @SubmittedText, GETDATE());
-        SELECT SCOPE_IDENTITY() AS SubmissionId;
-      `)
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert({
+        userId,
+        submittedText: text,
+        submittedAt: new Date().toISOString()
+      })
+      .select('id')
+      .single()
 
-    return submissionResult.recordset[0].SubmissionId
+    if (error) throw error
+    return data.id
   } catch (error) {
     console.error("Error submitting medical text:", error)
-    // Fall back to mock data in case of error
-    console.log("Falling back to mock data after error in submitMedicalText")
-    const { mockSubmitMedicalText } = require("./mock-data")
-    return mockSubmitMedicalText(userId, text)
+    throw error
   }
 }
 
 // Save laymen terms explanation
 export async function saveLaymenTerms(submissionId: number, explanation: string): Promise<number> {
   try {
-    const pool = await getConnection()
-    // Insert laymen terms
-    const result = await pool
-      .request()
-      .input("SubmissionId", sql.Int, submissionId)
-      .input("Explanation", sql.NVarChar, explanation)
-      .query(`
-        INSERT INTO [dbo].[LaymenTerms] (SubmissionId, Explanation, ReturnedAt)
-        VALUES (@SubmissionId, @Explanation, GETDATE());
-        SELECT SCOPE_IDENTITY() AS LaymenTermId;
-      `)
+    const { data, error } = await supabase
+      .from('laymen_terms')
+      .insert({
+        submissionId,
+        explanation,
+        returnedAt: new Date().toISOString()
+      })
+      .select('id')
+      .single()
 
-    return result.recordset[0].LaymenTermId
+    if (error) throw error
+    return data.id
   } catch (error) {
     console.error("Error saving laymen terms:", error)
-    // Fall back to mock data in case of error
-    console.log("Falling back to mock data after error in saveLaymenTerms")
-    const { mockSaveLaymenTerms } = require("./mock-data")
-    return mockSaveLaymenTerms(submissionId, explanation)
+    throw error
   }
 }
 
 // Get user by username
 export async function getUserByUsername(username: string): Promise<User | null> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("Username", sql.NVarChar, username)
-      .query("SELECT Id, Username FROM [dbo].[Users] WHERE Username = @Username")
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, username')
+      .eq('username', username)
+      .single()
 
-    return result.recordset[0] || null
+    if (error && error.code !== 'PGRST116') throw error // PGRST116 is "no rows returned"
+    return data
   } catch (error) {
     console.error("Error fetching user:", error)
-    // Fall back to mock data in case of error
-    console.log("Falling back to mock data after error in getUserByUsername")
-    const { mockGetUserByUsername } = require("./mock-data")
-    return mockGetUserByUsername(username)
+    return null
   }
 }
 
 // Create new user
 export async function createUser(username: string, password: string): Promise<number> {
   try {
-    const pool = await getConnection()
-    // In a real app, you would hash the password
-    const result = await pool
-      .request()
-      .input("Username", sql.NVarChar, username)
-      .input("Password", sql.NVarChar, password)
-      .query(`
-        INSERT INTO [dbo].[Users] (Username, Password)
-        VALUES (@Username, @Password);
-        SELECT SCOPE_IDENTITY() AS UserId;
-      `)
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        username,
+        password_hash: password // Note: In production, this should be hashed
+      })
+      .select('id')
+      .single()
 
-    return result.recordset[0].UserId
+    if (error) throw error
+    return data.id
   } catch (error) {
     console.error("Error creating user:", error)
-    // Fall back to mock data in case of error
-    console.log("Falling back to mock data after error in createUser")
-    const { mockCreateUser } = require("./mock-data")
-    return mockCreateUser(username, password)
+    throw error
   }
 }

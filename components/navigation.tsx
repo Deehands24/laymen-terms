@@ -42,6 +42,19 @@ export function Navigation({ user, onSignOut }: NavigationProps) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => {
+                  console.log('Current user data:', localStorage.getItem('user'));
+                  localStorage.clear();
+                  console.log('LocalStorage cleared');
+                  window.location.reload();
+                }}
+                className="bg-red-100 text-red-600 hover:bg-red-200"
+              >
+                Debug: Clear Data
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onSignOut}
                 className="bg-white/50 backdrop-blur-sm hover:bg-white/70"
               >

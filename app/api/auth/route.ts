@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         console.log("Starting login for:", username)
         const result = await loginUser(username, password)
         console.log("Login successful for:", username)
-        return NextResponse.json({ data: result }, { headers })
+        return NextResponse.json({ data: { userId: result.user.id, username: result.user.username } }, { headers })
       } else if (action === "register") {
         console.log("Starting registration for:", username)
         const user = await registerUser(username, password)

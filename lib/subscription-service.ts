@@ -1,4 +1,4 @@
-import { sql, getConnection } from "./db"
+import { supabase } from "./db"
 
 export interface SubscriptionTier {
   id: number
@@ -19,19 +19,41 @@ export interface UserSubscription {
 
 export async function getUserSubscription(userId: number): Promise<UserSubscription | null> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query(`
-        SELECT * FROM [dbo].[UserSubscriptions] 
-        WHERE UserId = @UserId AND IsActive = 1
-      `)
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .single()
 
-    return result.recordset[0] || null
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      console.error("Error fetching user subscription:", error)
+      return null
+    }
+
+    if (!data) {
+      // Return free tier if no subscription
+      return {
+        userId,
+        tierId: 1,
+        startDate: new Date(),
+        endDate: null,
+        isActive: true,
+        translationsUsed: 0,
+      }
+    }
+
+    return {
+      userId: data.user_id,
+      tierId: data.tier_id,
+      startDate: new Date(data.start_date),
+      endDate: data.end_date ? new Date(data.end_date) : null,
+      isActive: data.is_active,
+      translationsUsed: data.translations_used
+    }
   } catch (error) {
     console.error("Error fetching user subscription:", error)
-    // Return mock data in case of error
+    // Return free tier as fallback
     return {
       userId,
       tierId: 1,
@@ -45,21 +67,29 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
 
 export async function getSubscriptionTier(tierId: number): Promise<SubscriptionTier | null> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("TierId", sql.Int, tierId)
-      .query(`
-        SELECT * FROM [dbo].[SubscriptionPlans] 
-        WHERE Id = @TierId
-      `)
+    const { data, error } = await supabase
+      .from('subscription_plans')
+      .select('*')
+      .eq('id', tierId)
+      .single()
 
-    return result.recordset[0] || null
+    if (error) {
+      console.error("Error fetching subscription tier:", error)
+      return null
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      monthlyPrice: data.monthly_price,
+      translationsPerMonth: data.translations_per_month,
+      features: data.features || []
+    }
   } catch (error) {
     console.error("Error fetching subscription tier:", error)
-    // Return mock data in case of error
+    // Return free tier as fallback
     return {
-      id: tierId,
+      id: 1,
       name: "Free",
       monthlyPrice: 0,
       translationsPerMonth: 5,
@@ -70,15 +100,27 @@ export async function getSubscriptionTier(tierId: number): Promise<SubscriptionT
 
 export async function incrementTranslationUsage(userId: number): Promise<boolean> {
   try {
-    const pool = await getConnection()
-    await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query(`
-        UPDATE [dbo].[UserSubscriptions]
-        SET TranslationsUsed = TranslationsUsed + 1
-        WHERE UserId = @UserId AND IsActive = 1
-      `)
+    // First, get current usage
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('translations_used')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .single()
+
+    const currentUsage = subscription?.translations_used || 0
+
+    // Update usage count
+    const { error } = await supabase
+      .from('user_subscriptions')
+      .update({ translations_used: currentUsage + 1 })
+      .eq('user_id', userId)
+      .eq('is_active', true)
+
+    if (error) {
+      console.error("Error incrementing translation usage:", error)
+      return true // Return success anyway to not block the user
+    }
 
     return true
   } catch (error) {
@@ -93,7 +135,6 @@ export async function checkTranslationLimit(userId: number): Promise<{
   limit: number
 }> {
   try {
-    const pool = await getConnection()
     const subscription = await getUserSubscription(userId)
 
     // If no subscription, use free tier limit (5 translations)
@@ -110,6 +151,15 @@ export async function checkTranslationLimit(userId: number): Promise<{
 
     if (!tier) {
       throw new Error("Subscription tier not found")
+    }
+
+    // If unlimited (-1), always allow
+    if (tier.translationsPerMonth === -1) {
+      return {
+        canTranslate: true,
+        remaining: -1,
+        limit: -1,
+      }
     }
 
     const remaining = tier.translationsPerMonth - subscription.translationsUsed
@@ -132,17 +182,21 @@ export async function checkTranslationLimit(userId: number): Promise<{
 
 async function getFreeUsage(userId: number): Promise<number> {
   try {
-    const pool = await getConnection()
-    const result = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query(`
-        SELECT COUNT(*) AS UsageCount FROM [dbo].[Submissions]
-        WHERE UserId = @UserId AND DATEPART(month, SubmittedAt) = DATEPART(month, GETDATE())
-        AND DATEPART(year, SubmittedAt) = DATEPART(year, GETDATE())
-      `)
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('id', { count: 'exact' })
+      .eq('user_id', userId)
+      .gte('submitted_at', startOfMonth.toISOString())
 
-    return result.recordset[0]?.UsageCount || 0
+    if (error) {
+      console.error("Error getting free usage:", error)
+      return 0
+    }
+
+    return data?.length || 0
   } catch (error) {
     console.error("Error getting free usage:", error)
     return 0 // Return 0 in case of error to allow translations
