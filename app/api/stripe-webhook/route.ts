@@ -90,7 +90,7 @@ async function handleCheckoutCompleted(session: any) {
       .from('user_subscriptions')
       .upsert({
         user_id: parseInt(userId),
-        tier_id: parseInt(planId),
+        plan_id: parseInt(planId), // Changed from tier_id to match your table
         stripe_customer_id: session.customer,
         stripe_subscription_id: session.subscription,
         start_date: new Date().toISOString(),

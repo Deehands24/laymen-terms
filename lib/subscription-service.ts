@@ -1,6 +1,6 @@
 import { supabase } from "./db"
 
-export interface SubscriptionTier {
+export interface SubscriptionPlan {
   id: number
   name: string
   monthlyPrice: number
@@ -65,12 +65,12 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
   }
 }
 
-export async function getSubscriptionTier(tierId: number): Promise<SubscriptionTier | null> {
+export async function getSubscriptionPlan(planId: number): Promise<SubscriptionPlan | null> {
   try {
     const { data, error } = await supabase
       .from('subscription_plans')
       .select('*')
-      .eq('id', tierId)
+      .eq('id', planId)
       .single()
 
     if (error) {
@@ -147,7 +147,7 @@ export async function checkTranslationLimit(userId: number): Promise<{
       }
     }
 
-    const tier = await getSubscriptionTier(subscription.tierId)
+    const tier = await getSubscriptionPlan(subscription.tierId)
 
     if (!tier) {
       throw new Error("Subscription tier not found")
