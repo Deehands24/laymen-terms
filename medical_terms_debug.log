@@ -1,0 +1,86 @@
+2025-07-05 07:48:45,861 - INFO - Starting Medical Terms Website Debug Tests
+2025-07-05 07:48:45,891 - INFO - Website status code: 200
+2025-07-05 07:48:52,218 - INFO - Chrome WebDriver initialized successfully
+2025-07-05 07:48:52,218 - INFO - Testing account 1/10: testuser1
+2025-07-05 07:48:52,218 - INFO - Starting test for account: testuser1
+2025-07-05 07:48:55,396 - INFO - Analyzing page structure...
+2025-07-05 07:48:55,414 - INFO - Found 1 forms on the page
+2025-07-05 07:48:55,568 - INFO - Page structure analysis complete
+2025-07-05 07:48:55,568 - INFO - Attempting to create account: testuser1
+2025-07-05 07:49:26,584 - INFO - Filled username field: testuser1
+2025-07-05 07:50:07,635 - WARNING - Could not find element with identifiers: {'name': 'email', 'id': 'email', 'css': "input[type='email']", 'xpath': "//input[@placeholder='Email' or @placeholder='Email Address']"}
+2025-07-05 07:50:28,221 - INFO - Filled password field
+2025-07-05 07:50:28,275 - INFO - Submitted registration form
+2025-07-05 07:50:31,275 - INFO - Attempting to login: testuser1
+2025-07-05 07:50:31,357 - INFO - Found and clicked login link: sign-in
+2025-07-05 07:51:04,194 - INFO - Filled login username field
+2025-07-05 07:51:24,783 - INFO - Filled login password field
+2025-07-05 07:51:24,832 - INFO - Submitted login form
+2025-07-05 07:51:27,832 - INFO - Attempting to translate medical term: osteoporosis
+2025-07-05 07:52:08,887 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 07:52:08,887 - WARNING - Could not find translation interface
+2025-07-05 07:52:08,887 - INFO - Attempting to translate medical term: hypoglycemia
+2025-07-05 07:52:49,928 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 07:52:49,928 - WARNING - Could not find translation interface
+2025-07-05 07:52:51,928 - INFO - Testing account 2/10: testuser2
+2025-07-05 07:52:51,929 - INFO - Starting test for account: testuser2
+2025-07-05 07:52:54,995 - INFO - Analyzing page structure...
+2025-07-05 07:52:55,006 - INFO - Found 1 forms on the page
+2025-07-05 07:52:55,144 - INFO - Page structure analysis complete
+2025-07-05 07:52:55,144 - INFO - Attempting to create account: testuser2
+2025-07-05 07:53:26,167 - INFO - Filled username field: testuser2
+2025-07-05 07:54:07,225 - WARNING - Could not find element with identifiers: {'name': 'email', 'id': 'email', 'css': "input[type='email']", 'xpath': "//input[@placeholder='Email' or @placeholder='Email Address']"}
+2025-07-05 07:54:27,811 - INFO - Filled password field
+2025-07-05 07:54:27,854 - INFO - Submitted registration form
+2025-07-05 07:54:30,854 - INFO - Attempting to login: testuser2
+2025-07-05 07:54:30,915 - INFO - Found and clicked login link: sign-in
+2025-07-05 07:55:03,911 - INFO - Filled login username field
+2025-07-05 07:55:24,714 - INFO - Filled login password field
+2025-07-05 07:55:24,757 - INFO - Submitted login form
+2025-07-05 07:55:27,757 - INFO - Attempting to translate medical term: tachycardia
+2025-07-05 07:56:08,799 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 07:56:08,800 - WARNING - Could not find translation interface
+2025-07-05 07:56:08,800 - INFO - Attempting to translate medical term: nephritis
+2025-07-05 07:56:49,845 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 07:56:49,846 - WARNING - Could not find translation interface
+2025-07-05 07:56:51,846 - INFO - Testing account 3/10: testuser3
+2025-07-05 07:56:51,846 - INFO - Starting test for account: testuser3
+2025-07-05 07:56:54,902 - INFO - Analyzing page structure...
+2025-07-05 07:56:54,916 - INFO - Found 1 forms on the page
+2025-07-05 07:56:55,127 - INFO - Page structure analysis complete
+2025-07-05 07:56:55,127 - INFO - Attempting to create account: testuser3
+2025-07-05 07:57:26,195 - INFO - Filled username field: testuser3
+2025-07-05 07:58:07,241 - WARNING - Could not find element with identifiers: {'name': 'email', 'id': 'email', 'css': "input[type='email']", 'xpath': "//input[@placeholder='Email' or @placeholder='Email Address']"}
+2025-07-05 07:58:27,829 - INFO - Filled password field
+2025-07-05 07:58:27,873 - INFO - Submitted registration form
+2025-07-05 07:58:30,874 - INFO - Attempting to login: testuser3
+2025-07-05 07:58:30,935 - INFO - Found and clicked login link: sign-in
+2025-07-05 07:59:03,777 - INFO - Filled login username field
+2025-07-05 07:59:24,374 - INFO - Filled login password field
+2025-07-05 07:59:24,416 - INFO - Submitted login form
+2025-07-05 07:59:27,416 - INFO - Attempting to translate medical term: cerebrovascular accident
+2025-07-05 08:00:08,459 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 08:00:08,459 - WARNING - Could not find translation interface
+2025-07-05 08:00:08,459 - INFO - Attempting to translate medical term: nephritis
+2025-07-05 08:00:49,499 - WARNING - Could not find element with identifiers: {'name': 'search', 'id': 'search', 'css': "input[placeholder*='search' i]", 'xpath': "//input[@placeholder='Search' or @placeholder='Enter term' or @placeholder='Medical term']"}
+2025-07-05 08:00:49,499 - WARNING - Could not find translation interface
+2025-07-05 08:00:51,500 - INFO - Testing account 4/10: testuser4
+2025-07-05 08:00:51,500 - INFO - Starting test for account: testuser4
+2025-07-05 08:00:54,555 - INFO - Analyzing page structure...
+2025-07-05 08:00:54,570 - INFO - Found 1 forms on the page
+2025-07-05 08:00:54,721 - INFO - Page structure analysis complete
+2025-07-05 08:00:54,721 - INFO - Attempting to create account: testuser4
+2025-07-05 08:01:25,794 - INFO - Filled username field: testuser4
+2025-07-05 08:02:06,848 - WARNING - Could not find element with identifiers: {'name': 'email', 'id': 'email', 'css': "input[type='email']", 'xpath': "//input[@placeholder='Email' or @placeholder='Email Address']"}
+2025-07-05 08:02:27,427 - INFO - Filled password field
+2025-07-05 08:02:27,472 - INFO - Submitted registration form
+2025-07-05 08:02:30,472 - INFO - Attempting to login: testuser4
+2025-07-05 08:02:30,533 - INFO - Found and clicked login link: sign-in
+2025-07-05 08:03:03,367 - INFO - Filled login username field
+2025-07-05 08:03:23,954 - INFO - Filled login password field
+2025-07-05 08:03:23,999 - INFO - Submitted login form
+2025-07-05 08:03:26,999 - INFO - Attempting to translate medical term: fibromyalgia
+2025-07-05 08:03:45,906 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectionResetError(104, 'Connection reset by peer')': /session/5201652ed37fdd86393b385b45a4c865
+2025-07-05 08:03:45,907 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7c5a026bead0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/5201652ed37fdd86393b385b45a4c865
+2025-07-05 08:03:45,908 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7c5a026be0d0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/5201652ed37fdd86393b385b45a4c865
+2025-07-05 08:03:45,924 - INFO - WebDriver closed
