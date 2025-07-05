@@ -1,0 +1,103 @@
+{
+  "timestamp": "2025-07-05T07:48:58.183891",
+  "website": "https://medicalterms.vercel.app",
+  "total_accounts": 10,
+  "successful_account_creations": 1,
+  "successful_logins": 0,
+  "total_translations_attempted": 0,
+  "successful_translations": 0,
+  "accounts": [
+    {
+      "username": "SharpNurse947",
+      "password": "Test7143!",
+      "account_number": 1,
+      "created": true,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "KeenResident317",
+      "password": "Test1711!",
+      "account_number": 2,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "QuickMedic769",
+      "password": "Test6002!",
+      "account_number": 3,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "KeenSurgeon505",
+      "password": "Test8111!",
+      "account_number": 4,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "SharpSpecialist580",
+      "password": "Test9012!",
+      "account_number": 5,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "QuickSurgeon317",
+      "password": "Test4383!",
+      "account_number": 6,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "CleverTherapist761",
+      "password": "Test3604!",
+      "account_number": 7,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "BrightResident310",
+      "password": "Test5508!",
+      "account_number": 8,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "SwiftSurgeon339",
+      "password": "Test4659!",
+      "account_number": 9,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    },
+    {
+      "username": "SmartPhysician395",
+      "password": "Test5889!",
+      "account_number": 10,
+      "created": false,
+      "login_successful": false,
+      "translations": []
+    }
+  ],
+  "issues_found": [
+    "Login failed for SharpNurse947",
+    "Account creation failed for KeenResident317",
+    "Account creation failed for QuickMedic769",
+    "Account creation failed for KeenSurgeon505",
+    "Account creation failed for SharpSpecialist580",
+    "Account creation failed for QuickSurgeon317",
+    "Account creation failed for CleverTherapist761",
+    "Account creation failed for BrightResident310",
+    "Account creation failed for SwiftSurgeon339",
+    "Account creation failed for SmartPhysician395"
+  ]
+}
