@@ -74,7 +74,12 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
               onChange={(e) => setUsername(e.target.value)}
               className="bg-white/50 border-gray-100"
               required
+              minLength={3}
+              maxLength={20}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Username only - no email required for medical confidentiality
+            </p>
           </div>
           <div>
             <Input
@@ -84,7 +89,11 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               className="bg-white/50 border-gray-100"
               required
+              minLength={6}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Minimum 6 characters
+            </p>
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}

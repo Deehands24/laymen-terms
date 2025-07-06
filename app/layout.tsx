@@ -19,6 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script src="https://js.stripe.com/v3/" async></script>
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <div className="min-h-screen bg-gradient-to-br from-white to-[rgba(229,250,252,0.3)] backdrop-blur-sm">

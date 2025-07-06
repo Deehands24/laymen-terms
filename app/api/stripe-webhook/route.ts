@@ -90,12 +90,19 @@ async function handleCheckoutCompleted(session: any) {
       .from('user_subscriptions')
       .upsert({
         user_id: parseInt(userId),
-        plan_id: parseInt(planId), // Changed from tier_id to match your table
+        plan_id: planId.toString(),
+        tier_id: parseInt(planId), // Keep both for compatibility
         stripe_customer_id: session.customer,
         stripe_subscription_id: session.subscription,
+        status: 'active',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
         start_date: new Date().toISOString(),
         is_active: true,
-        translations_used: 0
+        translations_used: 0,
+        translations_used_this_period: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
 
     if (error) {
@@ -149,7 +156,10 @@ async function handlePaymentSucceeded(invoice: any) {
       .from('user_subscriptions')
       .update({
         translations_used: 0,
-        last_payment_date: new Date().toISOString()
+        translations_used_this_period: 0,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        updated_at: new Date().toISOString()
       })
       .eq('stripe_customer_id', invoice.customer)
       .eq('is_active', true)

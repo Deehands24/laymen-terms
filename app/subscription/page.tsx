@@ -67,6 +67,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
 export default function SubscriptionPage() {
   const [user, setUser] = useState<{ id: number; username: string } | null>(null)
   const [currentPlan, setCurrentPlan] = useState<number | null>(null)
+  const [message, setMessage] = useState<string>("")
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
@@ -74,11 +75,57 @@ export default function SubscriptionPage() {
       setUser(JSON.parse(storedUser))
       setCurrentPlan(1) // Free plan
     }
+
+    // Check for success/cancel messages from Stripe
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('success')) {
+      setMessage("Payment successful! Your subscription has been updated.")
+    } else if (urlParams.get('canceled')) {
+      setMessage("Payment was canceled. You can try again anytime.")
+    }
   }, [])
 
   const handleSubscribe = async (planId: number) => {
-    // In a real app, this would redirect to a payment processor
-    alert(`Redirecting to payment for plan ${planId}...`)
+    if (!user) return
+    
+    // Skip checkout for free plan
+    if (planId === 1) {
+      alert('You are already on the free plan!')
+      return
+    }
+
+    try {
+      // Create Stripe checkout session
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId,
+          userId: user.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      // Redirect to Stripe Checkout
+      const stripe = (window as any).Stripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_...')
+      if (stripe) {
+        await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        })
+      } else {
+        throw new Error('Stripe not loaded')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to start checkout process. Please try again.')
+    }
   }
 
   const handleSignOut = () => {
@@ -121,6 +168,16 @@ export default function SubscriptionPage() {
             <Link href="/">Back to Translator</Link>
           </Button>
         </div>
+
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            message.includes('successful') 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-yellow-50 border border-yellow-200 text-yellow-800'
+          }`}>
+            {message}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {subscriptionPlans.map((plan) => (

@@ -25,18 +25,41 @@ export async function registerUser(username: string, password: string): Promise<
   // Hash password
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   
-  // Insert new user
+  // Insert new user (no email required for medical confidentiality)
   const { data, error } = await supabase
     .from('users')
     .insert({
       username,
-      password_hash: passwordHash
+      password_hash: passwordHash,
+      email: null, // Explicitly set to null for medical confidentiality
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     })
     .select('id, username')
     .single();
     
   if (error) {
+    console.error('Registration error:', error);
     throw new Error('Failed to create user');
+  }
+
+  // Create free subscription for new user
+  try {
+    await supabase
+      .from('user_subscriptions')
+      .insert({
+        user_id: data.id,
+        plan_id: '1', // Free plan
+        tier_id: 1,
+        is_active: true,
+        start_date: new Date().toISOString(),
+        translations_used: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+  } catch (subscriptionError) {
+    console.error('Failed to create free subscription:', subscriptionError);
+    // Don't fail registration if subscription creation fails
   }
     
   return data;

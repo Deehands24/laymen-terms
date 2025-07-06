@@ -45,11 +45,11 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
 
     return {
       userId: data.user_id,
-      tierId: data.tier_id,
+      tierId: data.tier_id || parseInt(data.plan_id) || 1, // Handle both tier_id and plan_id
       startDate: new Date(data.start_date),
       endDate: data.end_date ? new Date(data.end_date) : null,
       isActive: data.is_active,
-      translationsUsed: data.translations_used
+      translationsUsed: data.translations_used_this_period || data.translations_used || 0
     }
   } catch (error) {
     console.error("Error fetching user subscription:", error)
@@ -103,17 +103,21 @@ export async function incrementTranslationUsage(userId: number): Promise<boolean
     // First, get current usage
     const { data: subscription } = await supabase
       .from('user_subscriptions')
-      .select('translations_used')
+      .select('translations_used_this_period, translations_used')
       .eq('user_id', userId)
       .eq('is_active', true)
       .single()
 
-    const currentUsage = subscription?.translations_used || 0
+    const currentUsage = subscription?.translations_used_this_period || subscription?.translations_used || 0
 
-    // Update usage count
+    // Update usage count (prefer translations_used_this_period for monthly tracking)
     const { error } = await supabase
       .from('user_subscriptions')
-      .update({ translations_used: currentUsage + 1 })
+      .update({ 
+        translations_used_this_period: currentUsage + 1,
+        translations_used: currentUsage + 1, // Keep both for backwards compatibility
+        updated_at: new Date().toISOString()
+      })
       .eq('user_id', userId)
       .eq('is_active', true)
 
