@@ -193,7 +193,7 @@ export default function SubscriptionPage() {
               <div>
                 <h3 className="font-medium mb-1">What happens if I reach my translation limit?</h3>
                 <p className="text-gray-600">
-                  Once you reach your monthly translation limit, you'll need to wait until your next billing cycle or
+                  Once you reach your monthly translation limit, you&apos;ll need to wait until your next billing cycle or
                   upgrade to a higher tier to continue translating.
                 </p>
               </div>
@@ -201,7 +201,7 @@ export default function SubscriptionPage() {
               <div>
                 <h3 className="font-medium mb-1">Can I cancel my subscription?</h3>
                 <p className="text-gray-600">
-                  Yes, you can cancel your subscription at any time. You'll continue to have access until the end of
+                  Yes, you can cancel your subscription at any time. You&apos;ll continue to have access until the end of
                   your current billing period.
                 </p>
               </div>

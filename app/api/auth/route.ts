@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getUserByUsername, createUser } from "@/lib/data-access"
 import { registerUser, loginUser } from '@/lib/auth'
 
+import { logger } from "@/lib/logger"
 export async function POST(request: NextRequest) {
   // Add CORS headers for cross-origin requests
   const origin = request.headers.get("origin") || ""
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    console.log('Auth API route called with env vars:', {
+    logger.debug('Auth API route called with env vars:', {
       hasServer: !!process.env.DB_SERVER,
       hasDatabase: !!process.env.DB_DATABASE,
       hasUser: !!process.env.DB_USER,
@@ -30,28 +31,28 @@ export async function POST(request: NextRequest) {
     });
 
     const body = await request.json()
-    console.log("Request body:", body)
+    logger.debug("Request body:", body)
 
     const { action, username, password } = body
 
     if (!username || !password) {
-      console.log("Missing username or password")
+      logger.debug("Missing username or password")
       return NextResponse.json({ error: "Username and password are required" }, { status: 400, headers })
     }
 
     try {
       if (action === "login") {
-        console.log("Starting login for:", username)
+        logger.debug("Starting login for:", username)
         const result = await loginUser(username, password)
-        console.log("Login successful for:", username)
+        logger.debug("Login successful for:", username)
         return NextResponse.json({ data: { userId: result.user.id, username: result.user.username } }, { headers })
       } else if (action === "register") {
-        console.log("Starting registration for:", username)
+        logger.debug("Starting registration for:", username)
         const user = await registerUser(username, password)
-        console.log("Registration successful for:", username)
+        logger.debug("Registration successful for:", username)
         return NextResponse.json({ data: { userId: user.id, username: user.username } }, { headers })
       } else {
-        console.log("Invalid action:", action)
+        logger.debug("Invalid action:", action)
         return NextResponse.json({ error: "Invalid action" }, { status: 400, headers })
       }
     } catch (actionError: any) {

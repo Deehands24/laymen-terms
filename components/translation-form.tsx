@@ -1,4 +1,5 @@
 "use client"
+import { logger } from "../lib/logger"
 
 import type React from "react"
 
@@ -56,15 +57,15 @@ export function TranslationForm({ userId }: TranslationFormProps) {
 
     try {
       // Debug logs
-      console.log("TranslationForm - Current userId:", userId)
-      console.log("TranslationForm - Current inputText:", inputText)
+      logger.debug("TranslationForm - Current userId:", userId)
+      logger.debug("TranslationForm - Current inputText:", inputText)
       
       const requestData = {
         userId,
         medicalText: inputText,
         model: selectedModel,
       }
-      console.log("TranslationForm - Request data being sent:", requestData)
+      logger.debug("TranslationForm - Request data being sent:", requestData)
 
       const response = await fetch("/api/translate", {
         method: "POST",
@@ -74,9 +75,9 @@ export function TranslationForm({ userId }: TranslationFormProps) {
         body: JSON.stringify(requestData),
       })
 
-      console.log("TranslationForm - Response status:", response.status)
+      logger.debug("TranslationForm - Response status:", response.status)
       const data = await response.json()
-      console.log("TranslationForm - Response data:", data)
+      logger.debug("TranslationForm - Response data:", data)
 
       if (!response.ok) {
         if (response.status === 403) {

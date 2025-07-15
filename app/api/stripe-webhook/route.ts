@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { supabase } from "@/lib/db"
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+import { logger } from "@/lib/logger"
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    console.log(`Webhook received: ${event.type}`)
+    logger.debug(`Webhook received: ${event.type}`)
 
     // Handle the event
     switch (event.type) {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        logger.debug(`Unhandled event type: ${event.type}`)
     }
 
     return NextResponse.json({ received: true })

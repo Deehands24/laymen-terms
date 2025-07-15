@@ -3,16 +3,17 @@ import { submitMedicalText, saveLaymenTerms } from "@/lib/data-access"
 import { translateMedicalText } from "@/lib/ai-service"
 import { checkTranslationLimit, incrementTranslationUsage } from "@/lib/subscription-service"
 
+import { logger } from "@/lib/logger"
 export async function POST(request: NextRequest) {
   try {
-    console.log("Translation API route called")
+    logger.debug("Translation API route called")
     const body = await request.json()
-    console.log("Request body (without text):", { ...body, medicalText: "[REDACTED]" })
+    logger.debug("Request body (without text):", { ...body, medicalText: "[REDACTED]" })
 
     const { userId, medicalText, model } = body
 
     if (!userId || !medicalText) {
-      console.log("Missing userId or medicalText")
+      logger.debug("Missing userId or medicalText")
       return NextResponse.json({ error: "User ID and medical text are required" }, { status: 400 })
     }
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       const { canTranslate, remaining } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
-        console.log("Translation limit reached for user:", userId)
+        logger.debug("Translation limit reached for user:", userId)
         return NextResponse.json(
           {
             error: "Translation limit reached",
@@ -32,24 +33,24 @@ export async function POST(request: NextRequest) {
       }
 
       // Submit the medical text
-      console.log("Submitting medical text for user:", userId)
+      logger.debug("Submitting medical text for user:", userId)
       const submissionId = await submitMedicalText(userId, medicalText)
-      console.log("Submission created with ID:", submissionId)
+      logger.debug("Submission created with ID:", submissionId)
 
       // Get AI translation using the specified model or default
-      console.log("Requesting translation with model:", model || "llama3-70b-8192")
+      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
       const explanation = await translateMedicalText(medicalText, {
         model: model || "llama3-70b-8192",
       })
-      console.log("Translation received, length:", explanation.length)
+      logger.debug("Translation received, length:", explanation.length)
 
       // Save the laymen terms
-      console.log("Saving laymen terms for submission:", submissionId)
+      logger.debug("Saving laymen terms for submission:", submissionId)
       const laymenTermId = await saveLaymenTerms(submissionId, explanation)
-      console.log("Laymen terms saved with ID:", laymenTermId)
+      logger.debug("Laymen terms saved with ID:", laymenTermId)
 
       // Increment usage counter
-      console.log("Incrementing usage counter for user:", userId)
+      logger.debug("Incrementing usage counter for user:", userId)
       await incrementTranslationUsage(userId)
 
       // Get updated remaining count
