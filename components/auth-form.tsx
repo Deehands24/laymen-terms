@@ -1,4 +1,5 @@
 "use client"
+import { logger } from "../lib/logger"
 
 import type React from "react"
 
@@ -25,7 +26,7 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
     setIsLoading(true)
 
     try {
-      console.log("Submitting auth form:", isLogin ? "login" : "register")
+      logger.debug("Submitting auth form:", isLogin ? "login" : "register")
 
       const response = await fetch("/api/auth", {
         method: "POST",
@@ -39,16 +40,16 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
         }),
       })
 
-      console.log("Response status:", response.status)
+      logger.debug("Response status:", response.status)
       const data = await response.json()
-      console.log("Response data:", data)
+      logger.debug("Response data:", data)
 
       if (!response.ok) {
         throw new Error(data.error || data.details || "Authentication failed")
       }
 
       // Call the success callback with user data
-      console.log("Authentication successful:", data.data)
+      logger.debug("Authentication successful:", data.data)
       onAuthSuccess(data.data.userId, data.data.username)
     } catch (err) {
       console.error("Auth error:", err)

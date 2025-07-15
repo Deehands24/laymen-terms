@@ -1,5 +1,6 @@
 import { generateText } from "ai"
 import { groq } from "@ai-sdk/groq"
+import { logger } from "./logger"
 
 // Define the system prompt for medical term translation
 const SYSTEM_PROMPT = `
@@ -25,11 +26,11 @@ export async function translateMedicalText(medicalText: string, options: Transla
   const { model = "llama3-70b-8192", temperature = 0.3 } = options
 
   try {
-    console.log("Starting translation with model:", model)
+    logger.debug("Starting translation with model:", model)
 
     // Check if we're in a development/preview environment
     if (process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview") {
-      console.log("Using mock translation in development/preview environment")
+      logger.debug("Using mock translation in development/preview environment")
       // Return a mock translation for development/preview
       return `This is a simplified version of: "${medicalText}"\n\nMedical terms have been translated to simple language that's easy to understand.`
     }
@@ -42,7 +43,7 @@ export async function translateMedicalText(medicalText: string, options: Transla
       temperature: temperature,
     })
 
-    console.log("Translation completed successfully")
+    logger.debug("Translation completed successfully")
     return text || "No translation available."
   } catch (error) {
     console.error("Error translating medical text:", error)

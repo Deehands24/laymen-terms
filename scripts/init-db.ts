@@ -1,16 +1,17 @@
-import 'dotenv/config';
-import { initializeDatabase } from '../lib/db';
+import 'dotenv/config'
+import { initializeDatabase } from '../lib/db'
+import { logger } from '../lib/logger'
 
 async function main() {
   try {
-    console.log('Initializing database...');
-    await initializeDatabase();
-    console.log('Database initialization complete!');
-    process.exit(0);
+    logger.debug('Initializing database...')
+    await initializeDatabase()
+    logger.debug('Database initialization complete!')
+    process.exit(0)
   } catch (error) {
-    console.error('Failed to initialize database:', error);
-    process.exit(1);
+    console.error('Failed to initialize database:', error)
+    process.exit(1)
   }
 }
 
-main(); 
+main()

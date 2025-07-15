@@ -1,4 +1,5 @@
 "use client"
+import { logger } from "../lib/logger"
 
 import type React from "react"
 import Link from "next/link"
@@ -43,9 +44,9 @@ export function Navigation({ user, onSignOut }: NavigationProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  console.log('Current user data:', localStorage.getItem('user'));
+                  logger.debug('Current user data:', localStorage.getItem('user'));
                   localStorage.clear();
-                  console.log('LocalStorage cleared');
+                  logger.debug('LocalStorage cleared');
                   window.location.reload();
                 }}
                 className="bg-red-100 text-red-600 hover:bg-red-200"

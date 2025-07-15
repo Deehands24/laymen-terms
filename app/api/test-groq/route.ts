@@ -2,9 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { groq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 
+import { logger } from "@/lib/logger"
 export async function GET(request: NextRequest) {
   try {
-    console.log("Testing Groq connection...")
+    logger.debug("Testing Groq connection...")
 
     // Simple test to check if Groq is working
     const { text } = await generateText({
