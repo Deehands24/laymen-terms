@@ -40,7 +40,7 @@ export function TranslationForm({ userId }: TranslationFormProps) {
           setModels(data.data)
         }
       } catch (error) {
-        console.error("Error fetching models:", error)
+        logger.error("Error fetching models:", error)
       }
     }
 
@@ -97,7 +97,7 @@ export function TranslationForm({ userId }: TranslationFormProps) {
         setError("Note: We used a fallback method to generate this translation. Some features may be limited.")
       }
     } catch (err) {
-      console.error("Translation error:", err)
+      logger.error("Translation error:", err)
       setError(err instanceof Error ? err.message : "Translation failed")
     } finally {
       setIsLoading(false)

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAvailableModels } from "@/lib/ai-service"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
       data: models,
     })
   } catch (error) {
-    console.error("Error fetching models:", error)
+    logger.error("Error fetching models:", error)
     return NextResponse.json({ error: "Failed to fetch available models" }, { status: 500 })
   }
 }

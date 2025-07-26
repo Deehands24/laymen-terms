@@ -1,4 +1,5 @@
 import { supabase } from "./db"
+import { logger } from "./logger"
 
 export interface SubscriptionPlan {
   id: number
@@ -27,7 +28,7 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-      console.error("Error fetching user subscription:", error)
+      logger.error("Error fetching user subscription:", error)
       return null
     }
 
@@ -52,7 +53,7 @@ export async function getUserSubscription(userId: number): Promise<UserSubscript
       translationsUsed: data.translations_used
     }
   } catch (error) {
-    console.error("Error fetching user subscription:", error)
+    logger.error("Error fetching user subscription:", error)
     // Return free tier as fallback
     return {
       userId,
@@ -74,7 +75,7 @@ export async function getSubscriptionPlan(planId: number): Promise<SubscriptionP
       .single()
 
     if (error) {
-      console.error("Error fetching subscription tier:", error)
+      logger.error("Error fetching subscription tier:", error)
       return null
     }
 
@@ -86,7 +87,7 @@ export async function getSubscriptionPlan(planId: number): Promise<SubscriptionP
       features: data.features || []
     }
   } catch (error) {
-    console.error("Error fetching subscription tier:", error)
+    logger.error("Error fetching subscription tier:", error)
     // Return free tier as fallback
     return {
       id: 1,
@@ -118,13 +119,13 @@ export async function incrementTranslationUsage(userId: number): Promise<boolean
       .eq('is_active', true)
 
     if (error) {
-      console.error("Error incrementing translation usage:", error)
+      logger.error("Error incrementing translation usage:", error)
       return true // Return success anyway to not block the user
     }
 
     return true
   } catch (error) {
-    console.error("Error incrementing translation usage:", error)
+    logger.error("Error incrementing translation usage:", error)
     return true // Return success anyway to not block the user
   }
 }
@@ -170,7 +171,7 @@ export async function checkTranslationLimit(userId: number): Promise<{
       limit: tier.translationsPerMonth,
     }
   } catch (error) {
-    console.error("Error checking translation limit:", error)
+    logger.error("Error checking translation limit:", error)
     // Allow translations in case of error
     return {
       canTranslate: true,
@@ -192,13 +193,13 @@ async function getFreeUsage(userId: number): Promise<number> {
       .gte('submitted_at', startOfMonth.toISOString())
 
     if (error) {
-      console.error("Error getting free usage:", error)
+      logger.error("Error getting free usage:", error)
       return 0
     }
 
     return data?.length || 0
   } catch (error) {
-    console.error("Error getting free usage:", error)
+    logger.error("Error getting free usage:", error)
     return 0 // Return 0 in case of error to allow translations
   }
 }
