@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       sample: text,
     })
   } catch (error) {
-    console.error("Groq test failed:", error)
+    logger.error("Groq test failed:", error)
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
 
     return NextResponse.json(

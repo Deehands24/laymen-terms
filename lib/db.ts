@@ -31,13 +31,13 @@ export async function initializeDatabase() {
       // or using migrations. This is just for reference.
       logger.debug('Please create tables through Supabase dashboard or migrations')
     } else if (error) {
-      console.error('Database check error:', error)
+      logger.error('Database check error:', error)
       throw error
     } else {
       logger.debug('Database initialized successfully')
     }
   } catch (err) {
-    console.error('Failed to initialize database:', err)
+    logger.error('Failed to initialize database:', err)
     throw err
   }
 }

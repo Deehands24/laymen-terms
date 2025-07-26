@@ -1,4 +1,5 @@
 import { supabase } from "./db"
+import { logger } from "./logger"
 
 export interface User {
   id: number
@@ -50,7 +51,7 @@ export async function getUserTranslations(userId: number): Promise<UserLaymenTer
     if (error) throw error
     return data || []
   } catch (error) {
-    console.error("Error fetching user translations:", error)
+    logger.error("Error fetching user translations:", error)
     return []
   }
 }
@@ -67,7 +68,7 @@ export async function getUserActivitySummary(userId: number): Promise<UserActivi
     if (error) throw error
     return data
   } catch (error) {
-    console.error("Error fetching user activity summary:", error)
+    logger.error("Error fetching user activity summary:", error)
     return null
   }
 }
@@ -88,7 +89,7 @@ export async function submitMedicalText(userId: number, text: string): Promise<n
     if (error) throw error
     return data.id
   } catch (error) {
-    console.error("Error submitting medical text:", error)
+    logger.error("Error submitting medical text:", error)
     throw error
   }
 }
@@ -109,7 +110,7 @@ export async function saveLaymenTerms(submissionId: number, explanation: string)
     if (error) throw error
     return data.id
   } catch (error) {
-    console.error("Error saving laymen terms:", error)
+    logger.error("Error saving laymen terms:", error)
     throw error
   }
 }
@@ -126,7 +127,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
     if (error && error.code !== 'PGRST116') throw error // PGRST116 is "no rows returned"
     return data
   } catch (error) {
-    console.error("Error fetching user:", error)
+    logger.error("Error fetching user:", error)
     return null
   }
 }
@@ -146,7 +147,7 @@ export async function createUser(username: string, password: string): Promise<nu
     if (error) throw error
     return data.id
   } catch (error) {
-    console.error("Error creating user:", error)
+    logger.error("Error creating user:", error)
     throw error
   }
 }

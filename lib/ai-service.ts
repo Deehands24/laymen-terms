@@ -46,7 +46,7 @@ export async function translateMedicalText(medicalText: string, options: Transla
     logger.debug("Translation completed successfully")
     return text || "No translation available."
   } catch (error) {
-    console.error("Error translating medical text:", error)
+    logger.error("Error translating medical text:", error)
 
     // Return a fallback response instead of throwing
     return `Unable to translate the medical text at this time. Please try again later.\n\nOriginal text: "${medicalText}"`

@@ -52,7 +52,7 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
       logger.debug("Authentication successful:", data.data)
       onAuthSuccess(data.data.userId, data.data.username)
     } catch (err) {
-      console.error("Auth error:", err)
+      logger.error("Auth error:", err)
       setError(err instanceof Error ? err.message : "Authentication failed")
     } finally {
       setIsLoading(false)

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } catch (innerError) {
-      console.error("Error in translation process:", innerError)
+      logger.error("Error in translation process:", innerError)
 
       // If there's an error in the translation process but we can still generate a response,
       // return a simplified error response with the translation
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       })
     }
   } catch (error) {
-    console.error("Translation API error:", error)
+    logger.error("Translation API error:", error)
     // Return more detailed error information
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(

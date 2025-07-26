@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message)
+      logger.error('Webhook signature verification failed:', err.message)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       case 'v1.billing.meter.error_report_triggered':
         const meterError = event.data.object
-        console.error('Billing meter error:', meterError)
+        logger.error('Billing meter error:', meterError)
         // Log this error for monitoring
         await logBillingError(event)
         break
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error('Webhook error:', error)
+    logger.error('Webhook error:', error)
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -82,7 +82,7 @@ async function handleCheckoutCompleted(session: any) {
     const planId = session.metadata?.planId
 
     if (!userId || !planId) {
-      console.error('Missing metadata in checkout session')
+      logger.error('Missing metadata in checkout session')
       return
     }
 
@@ -100,10 +100,10 @@ async function handleCheckoutCompleted(session: any) {
       })
 
     if (error) {
-      console.error('Error creating subscription:', error)
+      logger.error('Error creating subscription:', error)
     }
   } catch (error) {
-    console.error('Error handling checkout completed:', error)
+    logger.error('Error handling checkout completed:', error)
   }
 }
 
@@ -118,10 +118,10 @@ async function handleSubscriptionUpdate(subscription: any) {
       .eq('stripe_subscription_id', subscription.id)
 
     if (error) {
-      console.error('Error updating subscription:', error)
+      logger.error('Error updating subscription:', error)
     }
   } catch (error) {
-    console.error('Error handling subscription update:', error)
+    logger.error('Error handling subscription update:', error)
   }
 }
 
@@ -136,10 +136,10 @@ async function handleSubscriptionDeleted(subscription: any) {
       .eq('stripe_subscription_id', subscription.id)
 
     if (error) {
-      console.error('Error deleting subscription:', error)
+      logger.error('Error deleting subscription:', error)
     }
   } catch (error) {
-    console.error('Error handling subscription deletion:', error)
+    logger.error('Error handling subscription deletion:', error)
   }
 }
 
@@ -156,22 +156,22 @@ async function handlePaymentSucceeded(invoice: any) {
       .eq('is_active', true)
 
     if (error) {
-      console.error('Error resetting usage:', error)
+      logger.error('Error resetting usage:', error)
     }
   } catch (error) {
-    console.error('Error handling payment succeeded:', error)
+    logger.error('Error handling payment succeeded:', error)
   }
 }
 
 async function handlePaymentFailed(invoice: any) {
   try {
     // Log payment failure
-    console.error('Payment failed for customer:', invoice.customer)
+    logger.error('Payment failed for customer:', invoice.customer)
     
     // You might want to send an email notification here
     // or update the subscription status
   } catch (error) {
-    console.error('Error handling payment failed:', error)
+    logger.error('Error handling payment failed:', error)
   }
 }
 
@@ -189,9 +189,9 @@ async function logBillingError(event: any) {
       })
 
     if (error) {
-      console.error('Error logging billing error:', error)
+      logger.error('Error logging billing error:', error)
     }
   } catch (error) {
-    console.error('Error in logBillingError:', error)
+    logger.error('Error in logBillingError:', error)
   }
 } 

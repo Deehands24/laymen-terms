@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid action" }, { status: 400, headers })
       }
     } catch (actionError: any) {
-      console.error("Action error details:", {
+      logger.error("Action error details:", {
         message: actionError?.message,
         stack: actionError?.stack,
         code: actionError?.code,
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       throw actionError
     }
   } catch (error: any) {
-    console.error("Auth error:", {
+    logger.error("Auth error:", {
       message: error?.message,
       stack: error?.stack,
       code: error?.code,
