@@ -41,19 +41,39 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      if (!username || !password) {
+        return NextResponse.json({ error: "Username and password are required" }, { status: 400, headers });
+      }
+
       if (action === "login") {
-        logger.debug("Starting login for:", username)
-        const result = await loginUser(username, password)
-        logger.debug("Login successful for:", username)
-        return NextResponse.json({ data: { userId: result.user.id, username: result.user.username } }, { headers })
+        logger.debug("Starting login for:", username);
+        try {
+          const result = await loginUser(username, password);
+          logger.debug("Login successful for:", username);
+          return NextResponse.json({ data: { userId: result.user.id, username: result.user.username } }, { headers });
+        } catch (error) {
+          logger.error("Login failed:", error);
+          return NextResponse.json({ 
+            error: error instanceof Error ? error.message : "Login failed",
+            details: error instanceof Error ? error.stack : undefined
+          }, { status: 401, headers });
+        }
       } else if (action === "register") {
-        logger.debug("Starting registration for:", username)
-        const user = await registerUser(username, password)
-        logger.debug("Registration successful for:", username)
-        return NextResponse.json({ data: { userId: user.id, username: user.username } }, { headers })
+        logger.debug("Starting registration for:", username);
+        try {
+          const user = await registerUser(username, password);
+          logger.debug("Registration successful for:", username);
+          return NextResponse.json({ data: { userId: user.id, username: user.username } }, { headers });
+        } catch (error) {
+          logger.error("Registration failed:", error);
+          return NextResponse.json({ 
+            error: error instanceof Error ? error.message : "Registration failed",
+            details: error instanceof Error ? error.stack : undefined
+          }, { status: 400, headers });
+        }
       } else {
-        logger.debug("Invalid action:", action)
-        return NextResponse.json({ error: "Invalid action" }, { status: 400, headers })
+        logger.debug("Invalid action:", action);
+        return NextResponse.json({ error: "Invalid action" }, { status: 400, headers });
       }
     } catch (actionError: any) {
       console.error("Action error details:", {

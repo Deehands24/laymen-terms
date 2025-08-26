@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
-import { supabase } from './db';
+import { supabase, supabaseAdmin } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
@@ -11,29 +12,45 @@ export interface User {
 }
 
 export async function registerUser(username: string, password: string): Promise<User> {
-  // Check if username already exists
-  const { data: existingUser, error: userError } = await supabase
+  // Ensure admin client is available for reads/writes that bypass RLS
+  if (!supabaseAdmin) {
+    console.error('Supabase admin client is not configured. SUPABASE_SERVICE_ROLE_KEY is missing.')
+    throw new Error('Supabase admin client not configured. Set SUPABASE_SERVICE_ROLE_KEY in your environment')
+  }
+
+  // Check if username already exists (using admin client)
+  const { data: existingUser, error: userError } = await supabaseAdmin
     .from('users')
     .select('id')
     .eq('username', username)
     .maybeSingle();
-  
+
   if (userError) {
     console.error('Error checking for existing user:', userError);
-    throw new Error('Error checking for existing user');
+    throw new Error(`Error checking for existing user: ${userError.message || userError}`);
   }
-  
+
   if (existingUser) {
     throw new Error('Username already exists');
   }
   
   // Hash password
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  
-  // Insert new user (no email required for medical confidentiality)
-  const { data, error } = await supabase
+
+  // Generate user id to satisfy NOT NULL / UUID PK constraints in DB
+  const userId = randomUUID();
+
+  // Check if Supabase is configured properly
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Missing Supabase configuration: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error('Supabase configuration error');
+  }
+
+  // Insert new user (using supabaseAdmin)
+    const { data, error } = await supabaseAdmin
     .from('users')
     .insert({
+      id: userId,
       username,
       password_hash: passwordHash,
       email: null, // Explicitly set to null for medical confidentiality
@@ -42,15 +59,15 @@ export async function registerUser(username: string, password: string): Promise<
     })
     .select('id, username')
     .single();
-    
+  
   if (error) {
     console.error('Registration error:', error);
-    throw new Error('Failed to create user');
+    throw new Error(`Failed to create user: ${error.message}`);
   }
 
   // Create free subscription for new user
   try {
-    await supabase
+    await supabaseAdmin
       .from('user_subscriptions')
       .insert({
         user_id: data.id,

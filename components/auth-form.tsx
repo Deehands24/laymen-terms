@@ -41,11 +41,23 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
       })
 
       logger.debug("Response status:", response.status)
-      const data = await response.json()
-      logger.debug("Response data:", data)
+      let data;
+      try {
+        const text = await response.text();
+        try {
+          data = JSON.parse(text);
+          logger.debug("Response data:", data);
+        } catch (e) {
+          logger.error("Failed to parse response:", text);
+          throw new Error("Invalid server response");
+        }
+      } catch (e) {
+        logger.error("Failed to read response");
+        throw new Error("Failed to read server response");
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || data.details || "Authentication failed")
+        throw new Error(data.error || data.details || "Authentication failed");
       }
 
       // Call the success callback with user data
