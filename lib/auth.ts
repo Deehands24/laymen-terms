@@ -12,12 +12,17 @@ export interface User {
 
 export async function registerUser(username: string, password: string): Promise<User> {
   // Check if username already exists
-  const { data: existingUser } = await supabase
+  const { data: existingUser, error: userError } = await supabase
     .from('users')
     .select('id')
     .eq('username', username)
-    .single();
-    
+    .maybeSingle();
+  
+  if (userError) {
+    console.error('Error checking for existing user:', userError);
+    throw new Error('Error checking for existing user');
+  }
+  
   if (existingUser) {
     throw new Error('Username already exists');
   }
@@ -103,4 +108,4 @@ export function verifyToken(token: string): { userId: number; username: string }
   } catch (err) {
     throw new Error('Invalid token');
   }
-} 
+}
