@@ -28,11 +28,10 @@ export async function translateMedicalText(medicalText: string, options: Transla
   try {
     logger.debug("Starting translation with model:", model)
 
-    // Check if we're in a development/preview environment
-    if (process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview") {
-      logger.debug("Using mock translation in development/preview environment")
-      // Return a mock translation for development/preview
-      return `This is a simplified version of: "${medicalText}"\n\nMedical terms have been translated to simple language that's easy to understand.`
+    // Check if GROQ_API_KEY is available
+    if (!process.env.GROQ_API_KEY) {
+      console.error("GROQ_API_KEY is not set in environment variables")
+      return `Unable to translate: API key not configured. Please contact support.\n\nOriginal text: "${medicalText}"`
     }
 
     // Use the AI SDK to generate text with Groq
@@ -47,9 +46,11 @@ export async function translateMedicalText(medicalText: string, options: Transla
     return text || "No translation available."
   } catch (error) {
     console.error("Error translating medical text:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    logger.debug("Translation error details:", errorMessage)
 
     // Return a fallback response instead of throwing
-    return `Unable to translate the medical text at this time. Please try again later.\n\nOriginal text: "${medicalText}"`
+    return `Unable to translate the medical text at this time. Error: ${errorMessage}\n\nPlease check your API configuration and try again.\n\nOriginal text: "${medicalText}"`
   }
 }
 

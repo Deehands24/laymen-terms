@@ -1,0 +1,35 @@
+# Medical Terms Translator - Robots.txt
+# This file tells search engines which pages they can and cannot crawl
+
+# Allow all bots to crawl everything (maximize SEO visibility)
+User-agent: *
+Allow: /
+
+# Don't index API routes (they're for backend use only)
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://medicalterms.vercel.app/sitemap.xml
+
+# Crawl rate (be nice to our servers)
+Crawl-delay: 1
+
+# Specific bot configurations
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
