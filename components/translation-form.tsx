@@ -3,7 +3,7 @@ import { logger } from "../lib/logger"
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FadeInSection } from "./fade-in-section"
@@ -17,7 +17,8 @@ interface TranslationFormProps {
 }
 
 export function TranslationForm({ userId }: TranslationFormProps) {
-  const [inputText, setInputText] = useState("")
+  const [isInputEmpty, setIsInputEmpty] = useState(true)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const [result, setResult] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -28,6 +29,14 @@ export function TranslationForm({ userId }: TranslationFormProps) {
   const [models, setModels] = useState<string[]>([])
   const [selectedModel, setSelectedModel] = useState<string>("llama3-70b-8192")
   const [showModelInfo, setShowModelInfo] = useState(false)
+
+  // Auto-hide model info
+  useEffect(() => {
+    if (showModelInfo) {
+      const timer = setTimeout(() => setShowModelInfo(false), 10000)
+      return () => clearTimeout(timer)
+    }
+  }, [showModelInfo])
 
   // Fetch available models
   useEffect(() => {
@@ -49,7 +58,8 @@ export function TranslationForm({ userId }: TranslationFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputText.trim()) return
+    const text = inputRef.current?.value || ""
+    if (!text.trim()) return
 
     setIsLoading(true)
     setError("")
@@ -58,11 +68,11 @@ export function TranslationForm({ userId }: TranslationFormProps) {
     try {
       // Debug logs
       logger.debug("TranslationForm - Current userId:", userId)
-      logger.debug("TranslationForm - Current inputText:", inputText)
-      
+      logger.debug("TranslationForm - Current inputText:", text)
+
       const requestData = {
         userId,
-        medicalText: inputText,
+        medicalText: text,
         model: selectedModel,
       }
       logger.debug("TranslationForm - Request data being sent:", requestData)
@@ -126,11 +136,15 @@ export function TranslationForm({ userId }: TranslationFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="backdrop-blur-sm bg-white/30 rounded-xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
           <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            ref={inputRef}
+            onChange={(e) => {
+              const empty = !e.target.value.trim()
+              if (empty !== isInputEmpty) setIsInputEmpty(empty)
+            }}
             placeholder="Enter medical text here..."
             className="w-full p-4 min-h-[150px] bg-transparent focus:outline-none resize-none"
             required
+            defaultValue=""
           />
         </div>
 
@@ -141,8 +155,6 @@ export function TranslationForm({ userId }: TranslationFormProps) {
               onValueChange={(value) => {
                 setSelectedModel(value)
                 setShowModelInfo(true)
-                // Hide model info after 10 seconds
-                setTimeout(() => setShowModelInfo(false), 10000)
               }}
             >
               <SelectTrigger className="bg-white/50 backdrop-blur-sm border-gray-100">
@@ -160,7 +172,7 @@ export function TranslationForm({ userId }: TranslationFormProps) {
 
           <Button
             type="submit"
-            disabled={isLoading || !inputText.trim()}
+            disabled={isLoading || isInputEmpty}
             className="bg-gradient-to-r from-teal-400 to-cyan-500 text-white border-none hover:opacity-90 transition-opacity"
           >
             {isLoading ? "Translating..." : "Translate"}
