@@ -5,11 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+})
+
 export function formatDate(date: Date | string): string {
   const d = new Date(date)
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+  if (isNaN(d.getTime())) {
+    return "Invalid Date"
+  }
+  return dateFormatter.format(d)
 }
