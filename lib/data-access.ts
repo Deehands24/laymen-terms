@@ -30,6 +30,8 @@ export interface UserLaymenTermsView {
   returnedAt: Date
 }
 
+export type UserTranslationHistoryItem = Pick<UserLaymenTermsView, 'laymenTermId' | 'submittedText' | 'explanation' | 'submittedAt'>
+
 export interface UserActivitySummary {
   userId: number
   username: string
@@ -39,13 +41,14 @@ export interface UserActivitySummary {
 }
 
 // Get user translations history
-export async function getUserTranslations(userId: number): Promise<UserLaymenTermsView[]> {
+export async function getUserTranslations(userId: number, limit = 100): Promise<UserTranslationHistoryItem[]> {
   try {
     const { data, error } = await supabase
       .from('user_laymen_terms_view')
-      .select('*')
+      .select('laymenTermId, submittedText, explanation, submittedAt')
       .eq('userId', userId)
       .order('submittedAt', { ascending: false })
+      .limit(limit)
 
     if (error) throw error
     return data || []
