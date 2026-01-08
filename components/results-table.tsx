@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { UserLaymenTermsView } from "@/lib/data-access"
+import type { TranslationHistoryItem } from "@/lib/data-access"
 import { formatDate } from "@/lib/utils"
 
 interface ResultsTableProps {
@@ -11,7 +11,7 @@ interface ResultsTableProps {
 }
 
 export function ResultsTable({ userId }: ResultsTableProps) {
-  const [translations, setTranslations] = useState<UserLaymenTermsView[]>([])
+  const [translations, setTranslations] = useState<TranslationHistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
