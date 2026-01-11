@@ -30,6 +30,11 @@ export interface UserLaymenTermsView {
   returnedAt: Date
 }
 
+export type TranslationHistoryItem = Pick<
+  UserLaymenTermsView,
+  'laymenTermId' | 'submittedText' | 'submittedAt' | 'explanation'
+>
+
 export interface UserActivitySummary {
   userId: number
   username: string
@@ -39,16 +44,18 @@ export interface UserActivitySummary {
 }
 
 // Get user translations history
-export async function getUserTranslations(userId: number): Promise<UserLaymenTermsView[]> {
+export async function getUserTranslations(userId: number): Promise<TranslationHistoryItem[]> {
   try {
+    // Optimization: Select only columns needed for the history list to reduce payload size
     const { data, error } = await supabase
       .from('user_laymen_terms_view')
-      .select('*')
+      .select('laymenTermId, submittedText, submittedAt, explanation')
       .eq('userId', userId)
       .order('submittedAt', { ascending: false })
 
     if (error) throw error
-    return data || []
+    // Supabase returns Partial<T> or any when selecting columns, so we cast to our subset type
+    return (data as unknown as TranslationHistoryItem[]) || []
   } catch (error) {
     console.error("Error fetching user translations:", error)
     return []
