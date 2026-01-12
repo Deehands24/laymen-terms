@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user has translations remaining
-      const { canTranslate, remaining } = await checkTranslationLimit(userId)
+      // Optimized: Capture limit here to avoid re-fetching later
+      const { canTranslate, remaining, limit } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
         logger.debug("Translation limit reached for user:", userId)
@@ -44,17 +45,21 @@ export async function POST(request: NextRequest) {
       })
       logger.debug("Translation received, length:", explanation.length)
 
+      // Optimized: Run save and increment in parallel
       // Save the laymen terms
       logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
-      logger.debug("Laymen terms saved with ID:", laymenTermId)
+      const laymenTermPromise = saveLaymenTerms(submissionId, explanation)
 
       // Increment usage counter
       logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
+      const incrementUsagePromise = incrementTranslationUsage(userId)
 
-      // Get updated remaining count
-      const updatedLimit = await checkTranslationLimit(userId)
+      const [laymenTermId] = await Promise.all([laymenTermPromise, incrementUsagePromise])
+      logger.debug("Laymen terms saved with ID:", laymenTermId)
+
+      // Optimized: Calculate remaining locally instead of DB call
+      // If unlimited (-1), stay -1. Otherwise decrement safely.
+      const newRemaining = remaining === -1 ? -1 : Math.max(0, remaining - 1)
 
       return NextResponse.json({
         success: true,
@@ -63,8 +68,8 @@ export async function POST(request: NextRequest) {
           laymenTermId,
           explanation,
           subscription: {
-            remaining: updatedLimit.remaining,
-            limit: updatedLimit.limit,
+            remaining: newRemaining,
+            limit: limit,
           },
         },
       })
