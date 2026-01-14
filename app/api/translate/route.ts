@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user has translations remaining
-      const { canTranslate, remaining } = await checkTranslationLimit(userId)
+      const { canTranslate, remaining, limit } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
         logger.debug("Translation limit reached for user:", userId)
@@ -44,17 +44,18 @@ export async function POST(request: NextRequest) {
       })
       logger.debug("Translation received, length:", explanation.length)
 
-      // Save the laymen terms
-      logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
+      // Save the laymen terms and increment usage in parallel
+      logger.debug("Saving laymen terms and incrementing usage for submission:", submissionId)
+      const [laymenTermId, _] = await Promise.all([
+        saveLaymenTerms(submissionId, explanation),
+        incrementTranslationUsage(userId),
+      ])
       logger.debug("Laymen terms saved with ID:", laymenTermId)
 
-      // Increment usage counter
-      logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
-
-      // Get updated remaining count
-      const updatedLimit = await checkTranslationLimit(userId)
+      // Calculate new remaining locally to save a DB call
+      // If limit is -1 (unlimited), remaining stays -1
+      // Otherwise, decrement remaining but clamp to 0
+      const newRemaining = remaining === -1 ? -1 : Math.max(0, remaining - 1)
 
       return NextResponse.json({
         success: true,
@@ -63,8 +64,8 @@ export async function POST(request: NextRequest) {
           laymenTermId,
           explanation,
           subscription: {
-            remaining: updatedLimit.remaining,
-            limit: updatedLimit.limit,
+            remaining: newRemaining,
+            limit: limit,
           },
         },
       })

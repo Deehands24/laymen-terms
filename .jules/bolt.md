@@ -1,0 +1,4 @@
+## 2025-05-23 - [Parallelized Translation API & Logic Discovery]
+**Learning:** Found that `app/api/translate/route.ts` was executing DB calls sequentially (Check Limit -> Submit -> Save -> Increment -> Check Limit again), resulting in 7 DB calls per request.
+Also discovered a potential logic bug in `checkTranslationLimit`: Free tier users (no `user_subscriptions` row) might not have their usage correctly incremented because `incrementTranslationUsage` relies on `UPDATE` which fails silently if no row exists, while `checkTranslationLimit` relies on `submissions` count for free users. This discrepancy means free users might have infinite usage if not handled elsewhere.
+**Action:** Parallelized `saveLaymenTerms` and `incrementTranslationUsage`. Removed the second redundant `checkTranslationLimit` call by calculating the new limit locally. This saves ~2 DB calls and parallelizes the write operations. Future work should address the free tier usage tracking reliability.
