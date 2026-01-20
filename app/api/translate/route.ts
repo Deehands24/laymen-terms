@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user has translations remaining
-      const { canTranslate, remaining } = await checkTranslationLimit(userId)
+      const { canTranslate, remaining, limit } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
         logger.debug("Translation limit reached for user:", userId)
@@ -32,17 +32,21 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
-      logger.debug("Submission created with ID:", submissionId)
+      // Submit the medical text and get AI translation in parallel to reduce latency
+      logger.debug("Starting parallel submission and translation for user:", userId)
 
-      // Get AI translation using the specified model or default
-      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
-        model: model || "llama3-70b-8192",
-      })
-      logger.debug("Translation received, length:", explanation.length)
+      const [submissionId, explanation] = await Promise.all([
+        submitMedicalText(userId, medicalText).then((id) => {
+          logger.debug("Submission created with ID:", id)
+          return id
+        }),
+        translateMedicalText(medicalText, {
+          model: model || "llama3-70b-8192",
+        }).then((text) => {
+          logger.debug("Translation received, length:", text.length)
+          return text
+        }),
+      ])
 
       // Save the laymen terms
       logger.debug("Saving laymen terms for submission:", submissionId)
@@ -54,7 +58,9 @@ export async function POST(request: NextRequest) {
       await incrementTranslationUsage(userId)
 
       // Get updated remaining count
-      const updatedLimit = await checkTranslationLimit(userId)
+      // OPTIMIZATION: Calculate locally to save a DB call
+      // We know we just consumed 1, so decrement locally
+      const updatedRemaining = remaining === -1 ? -1 : Math.max(0, remaining - 1)
 
       return NextResponse.json({
         success: true,
@@ -63,8 +69,8 @@ export async function POST(request: NextRequest) {
           laymenTermId,
           explanation,
           subscription: {
-            remaining: updatedLimit.remaining,
-            limit: updatedLimit.limit,
+            remaining: updatedRemaining,
+            limit: limit,
           },
         },
       })
