@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useRef, useState } from "react"
 
 interface FadeInSectionProps {
@@ -9,31 +8,57 @@ interface FadeInSectionProps {
   delay?: number
 }
 
+// Shared observer management
+const observerCallbacks = new WeakMap<Element, (entry: IntersectionObserverEntry) => void>();
+let sharedObserver: IntersectionObserver | null = null;
+
+function getSharedObserver() {
+  // IntersectionObserver is not available on the server
+  if (typeof window === "undefined") return null;
+
+  if (!sharedObserver) {
+    sharedObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const callback = observerCallbacks.get(entry.target);
+          if (callback) callback(entry);
+        }
+      });
+    });
+  }
+  return sharedObserver;
+}
+
 export function FadeInSection({ children, delay = 0 }: FadeInSectionProps) {
   const [isVisible, setIsVisible] = useState(false)
   const domRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            setIsVisible(true)
-          }, delay)
-        }
-      })
-    })
+    const { current } = domRef;
+    if (!current) return;
 
-    const { current } = domRef
-    if (current) {
-      observer.observe(current)
-    }
+    const observer = getSharedObserver();
+    if (!observer) return;
+
+    observerCallbacks.set(current, (entry) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          setIsVisible(true)
+        }, delay)
+
+        // Performance: Stop observing once visible to free up resources
+        observer.unobserve(entry.target);
+        observerCallbacks.delete(entry.target);
+      }
+    });
+
+    observer.observe(current);
 
     return () => {
-      if (current) {
-        observer.unobserve(current)
-      }
-    }
+      // It's safe to call unobserve even if already unobserved
+      observer.unobserve(current);
+      observerCallbacks.delete(current);
+    };
   }, [delay])
 
   return (
