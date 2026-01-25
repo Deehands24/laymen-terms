@@ -32,16 +32,18 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
-      logger.debug("Submission created with ID:", submissionId)
-
-      // Get AI translation using the specified model or default
+      // Submit the medical text and get AI translation in parallel
+      logger.debug("Starting submission and translation in parallel for user:", userId)
       logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
-        model: model || "llama3-70b-8192",
-      })
+
+      const [submissionId, explanation] = await Promise.all([
+        submitMedicalText(userId, medicalText),
+        translateMedicalText(medicalText, {
+          model: model || "llama3-70b-8192",
+        }),
+      ])
+
+      logger.debug("Submission created with ID:", submissionId)
       logger.debug("Translation received, length:", explanation.length)
 
       // Save the laymen terms
