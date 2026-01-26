@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { FadeInSection } from "@/components/fade-in-section"
 import { Navigation } from "@/components/navigation"
 import Link from "next/link"
+import Script from "next/script"
 
 interface SubscriptionPlan {
   id: number
@@ -157,6 +158,8 @@ export default function SubscriptionPage() {
 
   return (
     <>
+      {/* Load Stripe script only on the subscription page to improve performance on other pages */}
+      <Script src="https://js.stripe.com/v3/" />
       <Navigation user={user} onSignOut={handleSignOut} />
 
       <main className="container mx-auto px-4 py-12">
