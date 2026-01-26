@@ -85,7 +85,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script src="https://js.stripe.com/v3/" async></script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
