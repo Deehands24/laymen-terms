@@ -32,28 +32,38 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
-      logger.debug("Submission created with ID:", submissionId)
+      // Performance Optimization: Run DB submission and AI translation in parallel
+      // This significantly reduces latency by overlapping the database write with the external API call
+      logger.debug("Starting parallel execution: submitMedicalText + translateMedicalText")
 
-      // Get AI translation using the specified model or default
-      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
+      const submissionPromise = submitMedicalText(userId, medicalText)
+      const translationPromise = translateMedicalText(medicalText, {
         model: model || "llama3-70b-8192",
       })
-      logger.debug("Translation received, length:", explanation.length)
 
-      // Save the laymen terms
-      logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
-      logger.debug("Laymen terms saved with ID:", laymenTermId)
+      const [submissionId, explanation] = await Promise.all([
+        submissionPromise,
+        translationPromise
+      ])
 
-      // Increment usage counter
-      logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
+      logger.debug("Parallel execution finished. Submission ID:", submissionId, "Translation length:", explanation.length)
+
+      // Performance Optimization: Run saving result and incrementing usage in parallel
+      // These are independent DB operations that can run concurrently
+      logger.debug("Starting parallel execution: saveLaymenTerms + incrementTranslationUsage")
+
+      const saveTermsPromise = saveLaymenTerms(submissionId, explanation)
+      const incrementUsagePromise = incrementTranslationUsage(userId)
+
+      const [laymenTermId] = await Promise.all([
+        saveTermsPromise,
+        incrementUsagePromise
+      ])
+
+      logger.debug("Parallel execution finished. Laymen term ID:", laymenTermId)
 
       // Get updated remaining count
+      // Note: We await this after increment is done to ensure we get the latest count
       const updatedLimit = await checkTranslationLimit(userId)
 
       return NextResponse.json({

@@ -66,7 +66,7 @@ export default function Home() {
           <article className="prose prose-lg max-w-none text-gray-700">
             <h2 className="text-2xl font-semibold mb-4">Understanding Medical Terminology Made Easy</h2>
             <p className="mb-4">
-              Medical terminology can be confusing and overwhelming for patients. Our AI-powered medical terms translator helps you understand complex medical language from doctor's reports, lab results, prescriptions, and diagnoses. Whether you're trying to understand a diagnosis, medication instructions, or test results, we make medical language accessible to everyone.
+              Medical terminology can be confusing and overwhelming for patients. Our AI-powered medical terms translator helps you understand complex medical language from doctor&apos;s reports, lab results, prescriptions, and diagnoses. Whether you&apos;re trying to understand a diagnosis, medication instructions, or test results, we make medical language accessible to everyone.
             </p>
             <h3 className="text-xl font-semibold mb-3">How It Works</h3>
             <ul className="list-disc pl-6 mb-4">
