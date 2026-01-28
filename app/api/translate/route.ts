@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user has translations remaining
-      const { canTranslate, remaining } = await checkTranslationLimit(userId)
+      const { canTranslate, remaining: initialRemaining, limit } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
         logger.debug("Translation limit reached for user:", userId)
@@ -32,29 +32,32 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
-      logger.debug("Submission created with ID:", submissionId)
-
-      // Get AI translation using the specified model or default
-      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
+      // Parallelize submission and translation
+      // This saves time by running the DB insert and LLM API call concurrently
+      logger.debug("Starting parallel submission and translation for user:", userId)
+      const submissionPromise = submitMedicalText(userId, medicalText)
+      const translationPromise = translateMedicalText(medicalText, {
         model: model || "llama3-70b-8192",
       })
-      logger.debug("Translation received, length:", explanation.length)
 
-      // Save the laymen terms
-      logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
+      const [submissionId, explanation] = await Promise.all([submissionPromise, translationPromise])
+      logger.debug("Parallel execution completed. SubmissionId:", submissionId, "Translation length:", explanation.length)
+
+      // Parallelize saving results and incrementing usage
+      // We can start incrementing usage immediately as we have a successful translation
+      logger.debug("Starting parallel save and increment")
+      const savePromise = saveLaymenTerms(submissionId, explanation)
+      const incrementPromise = incrementTranslationUsage(userId)
+
+      const [laymenTermId] = await Promise.all([savePromise, incrementPromise])
       logger.debug("Laymen terms saved with ID:", laymenTermId)
 
-      // Increment usage counter
-      logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
-
-      // Get updated remaining count
-      const updatedLimit = await checkTranslationLimit(userId)
+      // Calculate new remaining limit locally instead of querying DB again
+      // This saves one database round-trip
+      let newRemaining = initialRemaining
+      if (limit !== -1 && initialRemaining > 0) {
+        newRemaining = initialRemaining - 1
+      }
 
       return NextResponse.json({
         success: true,
@@ -63,8 +66,8 @@ export async function POST(request: NextRequest) {
           laymenTermId,
           explanation,
           subscription: {
-            remaining: updatedLimit.remaining,
-            limit: updatedLimit.limit,
+            remaining: newRemaining,
+            limit: limit,
           },
         },
       })
