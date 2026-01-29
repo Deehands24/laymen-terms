@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { FadeInSection } from "@/components/fade-in-section"
 import { Navigation } from "@/components/navigation"
 import Link from "next/link"
+import Script from "next/script"
 
 interface SubscriptionPlan {
   id: number
@@ -273,6 +274,7 @@ export default function SubscriptionPage() {
           </Card>
         </div>
       </main>
+      <Script src="https://js.stripe.com/v3/" strategy="lazyOnload" />
     </>
   )
 }
