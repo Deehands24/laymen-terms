@@ -32,26 +32,39 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
-      logger.debug("Submission created with ID:", submissionId)
+      // ⚡ Bolt: Parallelize DB submission and AI translation to reduce total latency
+      logger.debug("Submitting medical text and requesting translation in parallel")
 
-      // Get AI translation using the specified model or default
-      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
-        model: model || "llama3-70b-8192",
-      })
-      logger.debug("Translation received, length:", explanation.length)
+      const [submissionId, explanation] = await Promise.all([
+        (async () => {
+          logger.debug("Submitting medical text for user:", userId)
+          const id = await submitMedicalText(userId, medicalText)
+          logger.debug("Submission created with ID:", id)
+          return id
+        })(),
+        (async () => {
+          logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
+          const text = await translateMedicalText(medicalText, {
+            model: model || "llama3-70b-8192",
+          })
+          logger.debug("Translation received, length:", text.length)
+          return text
+        })(),
+      ])
 
-      // Save the laymen terms
-      logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
-      logger.debug("Laymen terms saved with ID:", laymenTermId)
-
-      // Increment usage counter
-      logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
+      // ⚡ Bolt: Parallelize saving results and updating usage
+      const [laymenTermId] = await Promise.all([
+        (async () => {
+          logger.debug("Saving laymen terms for submission:", submissionId)
+          const id = await saveLaymenTerms(submissionId, explanation)
+          logger.debug("Laymen terms saved with ID:", id)
+          return id
+        })(),
+        (async () => {
+          logger.debug("Incrementing usage counter for user:", userId)
+          await incrementTranslationUsage(userId)
+        })(),
+      ])
 
       // Get updated remaining count
       const updatedLimit = await checkTranslationLimit(userId)
