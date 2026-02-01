@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user has translations remaining
-      const { canTranslate, remaining } = await checkTranslationLimit(userId)
+      const { canTranslate, remaining, limit } = await checkTranslationLimit(userId)
 
       if (!canTranslate) {
         logger.debug("Translation limit reached for user:", userId)
@@ -32,29 +32,27 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Submit the medical text
-      logger.debug("Submitting medical text for user:", userId)
-      const submissionId = await submitMedicalText(userId, medicalText)
+      // Submit the medical text and get AI translation in parallel
+      logger.debug("Submitting medical text and requesting translation for user:", userId)
+      const [submissionId, explanation] = await Promise.all([
+        submitMedicalText(userId, medicalText),
+        translateMedicalText(medicalText, {
+          model: model || "llama3-70b-8192",
+        }),
+      ])
       logger.debug("Submission created with ID:", submissionId)
-
-      // Get AI translation using the specified model or default
-      logger.debug("Requesting translation with model:", model || "llama3-70b-8192")
-      const explanation = await translateMedicalText(medicalText, {
-        model: model || "llama3-70b-8192",
-      })
       logger.debug("Translation received, length:", explanation.length)
 
-      // Save the laymen terms
-      logger.debug("Saving laymen terms for submission:", submissionId)
-      const laymenTermId = await saveLaymenTerms(submissionId, explanation)
+      // Save the laymen terms and increment usage in parallel
+      logger.debug("Saving laymen terms and incrementing usage")
+      const [laymenTermId] = await Promise.all([
+        saveLaymenTerms(submissionId, explanation),
+        incrementTranslationUsage(userId),
+      ])
       logger.debug("Laymen terms saved with ID:", laymenTermId)
 
-      // Increment usage counter
-      logger.debug("Incrementing usage counter for user:", userId)
-      await incrementTranslationUsage(userId)
-
-      // Get updated remaining count
-      const updatedLimit = await checkTranslationLimit(userId)
+      // Calculate updated remaining count locally to avoid redundant DB call
+      const newRemaining = limit === -1 ? -1 : Math.max(0, remaining - 1)
 
       return NextResponse.json({
         success: true,
@@ -63,8 +61,8 @@ export async function POST(request: NextRequest) {
           laymenTermId,
           explanation,
           subscription: {
-            remaining: updatedLimit.remaining,
-            limit: updatedLimit.limit,
+            remaining: newRemaining,
+            limit,
           },
         },
       })
