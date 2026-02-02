@@ -1,0 +1,3 @@
+## 2024-05-22 - Frontend Verification of Lazy Scripts
+**Learning:** Verifying lazy-loaded scripts (like `next/script`) that depend on client-side auth requires precise state emulation. `localStorage` injection must be followed by a reload, and verification should wait for specific DOM elements (selectors) rather than generic network states (`networkidle`) which can be flaky in dev environments.
+**Action:** When testing conditional script loading, explicitly verify both positive (script present) and negative (script absent) states to confirm performance gains. Use specific selectors to confirm the app has reached the expected state before checking for the script.
