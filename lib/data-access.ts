@@ -30,6 +30,11 @@ export interface UserLaymenTermsView {
   returnedAt: Date
 }
 
+export type UserTranslationHistoryItem = Pick<
+  UserLaymenTermsView,
+  'laymenTermId' | 'submittedAt' | 'submittedText' | 'explanation'
+>
+
 export interface UserActivitySummary {
   userId: number
   username: string
@@ -39,13 +44,17 @@ export interface UserActivitySummary {
 }
 
 // Get user translations history
-export async function getUserTranslations(userId: number): Promise<UserLaymenTermsView[]> {
+// Optimization: Fetch only necessary columns and limit rows to prevent large payloads
+export async function getUserTranslations(userId: number, limit = 100): Promise<UserTranslationHistoryItem[]> {
   try {
     const { data, error } = await supabase
       .from('user_laymen_terms_view')
-      .select('*')
+      // Optimization: Select specific columns instead of '*' to reduce data transfer
+      .select('laymenTermId, submittedAt, submittedText, explanation')
       .eq('userId', userId)
       .order('submittedAt', { ascending: false })
+      // Optimization: Cap results to prevent unbounded queries
+      .limit(limit)
 
     if (error) throw error
     return data || []
